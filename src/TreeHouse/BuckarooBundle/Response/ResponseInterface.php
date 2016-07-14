@@ -2,6 +2,8 @@
 
 namespace TreeHouse\BuckarooBundle\Response;
 
+use TreeHouse\BuckarooBundle\Exception\BuckarooException;
+
 interface ResponseInterface
 {
     /**
@@ -37,8 +39,6 @@ interface ResponseInterface
 
     /**
      * @param array $data
-     *
-     * @return $this
      */
-    public static function create(array $data);
+    public function __construct(array $data);
 }

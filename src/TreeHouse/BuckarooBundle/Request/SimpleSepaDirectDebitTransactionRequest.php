@@ -2,11 +2,26 @@
 
 namespace TreeHouse\BuckarooBundle\Request;
 
+use Money\Money;
 use TreeHouse\BuckarooBundle\Model\Mandate;
 use TreeHouse\BuckarooBundle\Response\SimpleSepaDirectDebitTransactionResponse;
 
-class SimpleSepaDirectDebitTransactionRequest extends AbstractTransactionRequest
+class SimpleSepaDirectDebitTransactionRequest implements RequestInterface
 {
+    /**
+     * A reference used to identify this transaction between different systems.
+     *
+     * @var string
+     */
+    private $invoiceNumber;
+
+    /**
+     * The debit amount for the transaction.
+     *
+     * @var Money
+     */
+    private $amount;
+
     /**
      * The IBAN for the customer bank account on which the direct debit should be performed.
      *
@@ -45,67 +60,57 @@ class SimpleSepaDirectDebitTransactionRequest extends AbstractTransactionRequest
     private $datetimeCollect;
 
     /**
-     * @param string $iban
+     * @param string         $invoiceNumber
+     * @param Money          $amount
+     * @param Mandate        $mandate
+     * @param string         $customerIban
+     * @param string         $customerAccountName
+     * @param null|string    $customerBic
+     * @param \DateTime|null $datetimeCollect
      */
-    public function setCustomerIban($iban)
-    {
-        $this->customerIban = $iban;
-    }
-
-    /**
-     * @param string|null $bic
-     */
-    public function setCustomerBic($bic)
-    {
-        $this->customerBic = $bic;
-    }
-
-    /**
-     * @param string $accountName
-     */
-    public function setCustomerAccountName($accountName)
-    {
-        $this->customerAccountName = $accountName;
-    }
-
-    /**
-     * @param \DateTime $datetimeCollect
-     */
-    public function setDatetimeCollect(\DateTime $datetimeCollect)
-    {
+    public function __construct(
+        string $invoiceNumber,
+        Money $amount,
+        Mandate $mandate,
+        string $customerIban,
+        string $customerAccountName,
+        string $customerBic = null,
+        \DateTime $datetimeCollect = null
+    ) {
+        $this->invoiceNumber = $invoiceNumber;
+        $this->amount = $amount;
+        $this->mandate = $mandate;
+        $this->customerIban = $customerIban;
+        $this->customerAccountName = $customerAccountName;
+        $this->customerBic = $customerBic;
         $this->datetimeCollect = $datetimeCollect;
     }
 
     /**
-     * @param Mandate $mandate
+     * @inheritdoc
      */
-    public function setMandate(Mandate $mandate)
+    public function toArray() : array
     {
-        $this->mandate = $mandate;
+        return [
+            'BRQ_AMOUNT' => number_format($this->amount->getAmount() / 100, 2, '.', ''),
+            'BRQ_CURRENCY' => $this->amount->getCurrency()->getCode(),
+            'BRQ_INVOICENUMBER' => $this->invoiceNumber,
+            'BRQ_PAYMENT_METHOD' => 'simplesepadirectdebit',
+            'BRQ_COLLECTDATE' => $this->datetimeCollect ? $this->datetimeCollect->format('Y-m-d H:i:s') : '',
+            'BRQ_CUSTOMERACCOUNTNAME' => $this->customerAccountName,
+            'BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_CUSTOMERBIC' => (string) $this->customerBic,
+            'BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_CUSTOMERIBAN' => $this->customerIban,
+            'BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_MANDATEDATE' => $this->mandate->getDate()->format('Y-m-d'),
+            'BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_MANDATEREFERENCE' => $this->mandate->getReference(),
+            'BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_ACTION' => 'Pay',
+            'BRQ_STARTRECURRENT' => true,
+        ];
     }
 
     /**
      * @inheritdoc
      */
-    public function toArray()
-    {
-        return array_merge(parent::toArray(), [
-            'payment_method' => 'simplesepadirectdebit',
-            'CollectDate' => $this->datetimeCollect ? $this->datetimeCollect->format('Y-m-d H:i:s') : '',
-            'customeraccountname' => $this->customerAccountName,
-            'service_simplesepadirectdebit_CustomerBIC' => (string) $this->customerBic,
-            'service_simplesepadirectdebit_CustomerIBAN' => $this->customerIban,
-            'service_simplesepadirectdebit_MandateDate' => $this->mandate->getDate()->format('Y-m-d'),
-            'service_simplesepadirectdebit_MandateReference' => $this->mandate->getReference(),
-            'service_simplesepadirectdebit_action' => 'Pay',
-            'StartRecurrent' => true,
-        ]);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public static function getResponseClass()
+    public static function getResponseClass() : string
     {
         return SimpleSepaDirectDebitTransactionResponse::class;
     }

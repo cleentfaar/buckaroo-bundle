@@ -10,11 +10,11 @@ class IdealTransactionResponseTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function it_can_be_created()
+    public function it_can_be_constructed()
     {
         $data = [
             'BRQ_APIRESULT' => ResponseInterface::RESULT_SUCCESS,
-            'BRQ_INVOICENUMBER' => 123456789,
+            'BRQ_INVOICENUMBER' => '123456789',
             'BRQ_STATUSCODE' => ResponseInterface::STATUS_FAILURE,
             'BRQ_STATUSCODE_DETAIL' => 'ABC123',
             'BRQ_STATUSMESSAGE' => 'This is the status',
@@ -23,7 +23,7 @@ class IdealTransactionResponseTest extends \PHPUnit_Framework_TestCase
             'BRQ_REDIRECTURL' => 'http://www.go-to.com/this/page/',
         ];
 
-        $report = IdealTransactionResponse::create($data);
+        $report = new IdealTransactionResponse($data);
 
         $this->assertSame($data['BRQ_APIRESULT'], $report->getApiResult());
         $this->assertSame($data['BRQ_INVOICENUMBER'], $report->getInvoiceNumber());

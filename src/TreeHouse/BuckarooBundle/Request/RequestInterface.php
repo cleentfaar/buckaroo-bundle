@@ -7,15 +7,10 @@ interface RequestInterface
     /**
      * @return string
      */
-    public static function getResponseClass();
+    public static function getResponseClass() : string;
 
     /**
      * @return array
      */
-    public function toArray();
-
-    /**
-     * @return string|null
-     */
-    public function getOperation();
+    public function toArray() : array;
 }

@@ -7,7 +7,7 @@ use Money\Money;
 use TreeHouse\BuckarooBundle\Model\ConsumerMessage;
 use TreeHouse\BuckarooBundle\Model\Mandate;
 
-class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionResponse
+class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionResponse implements SignedResponseInterface
 {
     /**
      * The debit amount for the transaction.
@@ -101,26 +101,19 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
      *
      * @return $this
      */
-    public static function create(array $data)
+    public function __construct(array $data)
     {
-        $response = parent::create($data);
-
-        if ($response->isInvalid()) {
-            throw new \RuntimeException(sprintf(
-                'The transaction resulted in a %d response. The transaction cannot be completed: %s',
-                $response->getStatusCode(),
-                $response->getError()
-            ));
-        }
-
-        $requiredFields = [
+        parent::__construct($data);
+        parent::assertFields($data, [
             'BRQ_AMOUNT',
-            'BRQ_CURRENCY',
+            'BRQ_CONSUMERMESSAGE_CULTURE',
             'BRQ_CONSUMERMESSAGE_TITLE',
             'BRQ_CONSUMERMESSAGE_HTMLTEXT',
             'BRQ_CONSUMERMESSAGE_PLAINTEXT',
             'BRQ_CONSUMERMESSAGE_MUSTREAD',
+            'BRQ_CURRENCY',
             'BRQ_CUSTOMER_NAME',
+            'BRQ_INVOICENUMBER',
             'BRQ_PAYMENT',
             'BRQ_PAYMENT_METHOD',
             'BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_COLLECTDATE',
@@ -131,16 +124,10 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
             'BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_MANDATEREFERENCE',
             'BRQ_STARTRECURRENT',
             'BRQ_TRANSACTIONS',
-        ];
+        ]);
 
-        foreach ($requiredFields as $field) {
-            if (!isset($data[$field])) {
-                throw new \InvalidArgumentException(sprintf('Missing field: %s', $field));
-            }
-        }
-
-        $response->amount = new Money(intval($data['BRQ_AMOUNT'] * 100), new Currency($data['BRQ_CURRENCY']));
-        $response->consumerMessage = new ConsumerMessage(
+        $this->amount = new Money(intval($data['BRQ_AMOUNT'] * 100), new Currency($data['BRQ_CURRENCY']));
+        $this->consumerMessage = new ConsumerMessage(
             isset($data['BRQ_CONSUMERMESSAGE_CULTURE']) ? $data['BRQ_CONSUMERMESSAGE_CULTURE'] : null,
             $data['BRQ_CONSUMERMESSAGE_TITLE'],
             $data['BRQ_CONSUMERMESSAGE_HTMLTEXT'],
@@ -148,28 +135,28 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
             $data['BRQ_CONSUMERMESSAGE_MUSTREAD']
         );
 
-        $response->payment = $data['BRQ_PAYMENT'];
-        $response->paymentMethod = $data['BRQ_PAYMENT_METHOD'];
-        $response->startRecurrent = $data['BRQ_STARTRECURRENT'];
-        $response->transactions = $data['BRQ_TRANSACTIONS'];
-        $response->datetimeCollect = new \DateTime($data['BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_COLLECTDATE']);
-        $response->customerName = $data['BRQ_CUSTOMER_NAME'];
-        $response->customerBic = $data['BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_CUSTOMERBIC'];
-        $response->customerIban = $data['BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_CUSTOMERIBAN'];
-        $response->directDebitType = $data['BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_DIRECTDEBITTYPE'];
+        $this->payment = $data['BRQ_PAYMENT'];
+        $this->paymentMethod = $data['BRQ_PAYMENT_METHOD'];
+        $this->startRecurrent = $data['BRQ_STARTRECURRENT'];
+        $this->transactions = $data['BRQ_TRANSACTIONS'];
+        $this->datetimeCollect = new \DateTime($data['BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_COLLECTDATE']);
+        $this->customerName = $data['BRQ_CUSTOMER_NAME'];
+        $this->customerBic = $data['BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_CUSTOMERBIC'];
+        $this->customerIban = $data['BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_CUSTOMERIBAN'];
+        $this->directDebitType = $data['BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_DIRECTDEBITTYPE'];
 
-        $response->mandate = new Mandate(
+        $this->mandate = new Mandate(
             $data['BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_MANDATEREFERENCE'],
             new \DateTime($data['BRQ_SERVICE_SIMPLESEPADIRECTDEBIT_MANDATEDATE'])
         );
 
-        return $response;
+        return $this;
     }
 
     /**
      * @return Money
      */
-    public function getAmount()
+    public function getAmount() : Money
     {
         return $this->amount;
     }
@@ -177,7 +164,7 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
     /**
      * @return ConsumerMessage
      */
-    public function getConsumerMessage()
+    public function getConsumerMessage() : ConsumerMessage
     {
         return $this->consumerMessage;
     }
@@ -185,7 +172,7 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
     /**
      * @return string
      */
-    public function getCustomerIban()
+    public function getCustomerIban() : string
     {
         return $this->customerIban;
     }
@@ -193,7 +180,7 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
     /**
      * @return string
      */
-    public function getCustomerName()
+    public function getCustomerName() : string
     {
         return $this->customerName;
     }
@@ -201,7 +188,7 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
     /**
      * @return string
      */
-    public function getPayment()
+    public function getPayment() : string
     {
         return $this->payment;
     }
@@ -209,7 +196,7 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
     /**
      * @return string
      */
-    public function getPaymentMethod()
+    public function getPaymentMethod() : string
     {
         return $this->paymentMethod;
     }
@@ -217,7 +204,7 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
     /**
      * @return bool
      */
-    public function isStartRecurrent()
+    public function isStartRecurrent() : bool
     {
         return $this->startRecurrent;
     }
@@ -225,7 +212,7 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
     /**
      * @return string
      */
-    public function getTransactions()
+    public function getTransactions() : string
     {
         return $this->transactions;
     }
@@ -233,7 +220,7 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
     /**
      * @return \DateTime
      */
-    public function getCollectDate()
+    public function getCollectDate() : \DateTime
     {
         return $this->datetimeCollect;
     }
@@ -241,7 +228,7 @@ class SimpleSepaDirectDebitTransactionResponse extends AbstractTransactionRespon
     /**
      * @return Mandate
      */
-    public function getMandate()
+    public function getMandate() : Mandate
     {
         return $this->mandate;
     }

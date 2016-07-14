@@ -2,6 +2,8 @@
 
 namespace TreeHouse\BuckarooBundle\Response;
 
+use TreeHouse\BuckarooBundle\Exception\BuckarooException;
+
 class IdealTransactionSpecificationResponse implements ResponseInterface
 {
     /**
@@ -13,25 +15,17 @@ class IdealTransactionSpecificationResponse implements ResponseInterface
     private $issuers = [];
 
     /**
-     * @param array $issuers
-     */
-    private function __construct(array $issuers)
-    {
-        $this->issuers = $issuers;
-    }
-
-    /**
-     * @inheritdoc
+     * @param array $data
      *
-     * @return $this
+     * @throws BuckarooException
      */
-    public static function create(array $data)
+    public function __construct(array $data)
     {
         $keyPrefix = 'BRQ_SERVICES_2_ACTIONDESCRIPTION_1_REQUESTPARAMETERS_1_LISTITEMDESCRIPTION_';
         $firstKey = sprintf('%s%d_VALUE', $keyPrefix, 1);
 
         if (!array_key_exists($firstKey, $data)) {
-            throw new \RuntimeException(sprintf(
+            throw new BuckarooException(sprintf(
                 'Could not find key with issuers in the specification response: %s',
                 $firstKey
             ));
@@ -52,13 +46,13 @@ class IdealTransactionSpecificationResponse implements ResponseInterface
             $labelKey = sprintf('%s%d_DESCRIPTION', $keyPrefix, $i);
         }
 
-        return new self($issuers);
+        $this->issuers = $issuers;
     }
 
     /**
      * @return array
      */
-    public function getIssuers()
+    public function getIssuers() : array
     {
         return $this->issuers;
     }

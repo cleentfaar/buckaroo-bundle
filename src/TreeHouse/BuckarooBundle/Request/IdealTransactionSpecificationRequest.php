@@ -4,23 +4,23 @@ namespace TreeHouse\BuckarooBundle\Request;
 
 use TreeHouse\BuckarooBundle\Response\IdealTransactionSpecificationResponse;
 
-class IdealTransactionSpecificationRequest implements RequestInterface, BadSignatureRequestInterface
+class IdealTransactionSpecificationRequest implements OperationRequestInterface
 {
     /**
      * @inheritdoc
      */
-    public function toArray()
+    public function toArray() : array
     {
         return [
-            'services' => 'ideal',
-            'latestversiononly' => true,
+            'BRQ_SERVICES' => 'ideal',
+            'BRQ_LATESTVERSIONONLY' => true,
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public static function getResponseClass()
+    public static function getResponseClass() : string
     {
         return IdealTransactionSpecificationResponse::class;
     }
@@ -28,7 +28,7 @@ class IdealTransactionSpecificationRequest implements RequestInterface, BadSigna
     /**
      * @inheritdoc
      */
-    public function getOperation()
+    public function getOperation() : string
     {
         return 'transactionrequestspecification';
     }

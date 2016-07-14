@@ -2,6 +2,8 @@
 
 namespace TreeHouse\BuckarooBundle\Response;
 
+use TreeHouse\BuckarooBundle\Exception\BuckarooException;
+
 abstract class AbstractTransactionResponse implements ResponseInterface
 {
     /**
@@ -9,93 +11,60 @@ abstract class AbstractTransactionResponse implements ResponseInterface
      *
      * @var string
      */
-    private $apiResult;
+    protected $apiResult;
 
     /**
      * The statuscode of the transaction (see ResponseInterface).
      *
      * @var int|null
      */
-    private $statusCode;
+    protected $statusCode;
 
     /**
      * A detail status code which provides an extra explanation for the current status of the transaction.
      *
      * @var string
      */
-    private $statusCodeDetail;
+    protected $statusCodeDetail;
 
     /**
      * A message explaining the current (detail)status.
      *
      * @var string|null
      */
-    private $statusMessage;
+    protected $statusMessage;
 
     /**
      * The time at which the payment received it current status.
      *
      * @var \DateTime
      */
-    private $timestamp;
+    protected $timestamp;
 
     /**
      * The invoicenumber as provided in the request.
      *
      * @var string
      */
-    private $invoiceNumber;
-
-    /**
-     * @param string    $apiResult
-     * @param int       $statusCode
-     * @param string    $statusCodeDetail
-     * @param string    $statusMessage
-     * @param \DateTime $timestamp
-     * @param string    $invoiceNumber
-     */
-    private function __construct(
-        $apiResult,
-        $statusCode,
-        $statusCodeDetail,
-        $statusMessage,
-        \DateTime $timestamp,
-        $invoiceNumber
-    ) {
-        $this->apiResult = $apiResult;
-        $this->statusCode = $statusCode;
-        $this->statusCodeDetail = $statusCodeDetail;
-        $this->statusMessage = $statusMessage;
-        $this->timestamp = $timestamp;
-        $this->invoiceNumber = $invoiceNumber;
-    }
+    protected $invoiceNumber;
 
     /**
      * @inheritdoc
      */
-    public static function create(array $data)
+    public function __construct(array $data)
     {
-        $requiredFields = [
+        self::assertFields($data, [
             'BRQ_APIRESULT',
             'BRQ_STATUSCODE',
             'BRQ_STATUSMESSAGE',
             'BRQ_TIMESTAMP',
-        ];
+        ]);
 
-        foreach ($requiredFields as $field) {
-            if (!isset($data[$field])) {
-                throw new \InvalidArgumentException(sprintf('Missing field: %s', $field));
-            }
-        }
-
-        return new static(
-            $data['BRQ_APIRESULT'],
-            $data['BRQ_STATUSCODE'],
-            isset($data['BRQ_STATUSCODE_DETAIL']) ? $data['BRQ_STATUSCODE_DETAIL'] : null,
-            $data['BRQ_STATUSMESSAGE'],
-            new \DateTime($data['BRQ_TIMESTAMP']),
-            $data['BRQ_INVOICENUMBER']
-        );
+        $this->apiResult = $data['BRQ_APIRESULT'];
+        $this->statusCode = $data['BRQ_STATUSCODE'];
+        $this->statusCodeDetail = $data['BRQ_STATUSCODE_DETAIL'] ?? null;
+        $this->statusMessage = $data['BRQ_STATUSMESSAGE'];
+        $this->timestamp = new \DateTime($data['BRQ_TIMESTAMP']);
     }
 
     /**
@@ -133,7 +102,7 @@ abstract class AbstractTransactionResponse implements ResponseInterface
     /**
      * @return \DateTime
      */
-    public function getTimestamp()
+    public function getTimestamp() : \DateTime
     {
         return $this->timestamp;
     }
@@ -141,7 +110,7 @@ abstract class AbstractTransactionResponse implements ResponseInterface
     /**
      * @return string
      */
-    public function getInvoiceNumber()
+    public function getInvoiceNumber() : string
     {
         return $this->invoiceNumber;
     }
@@ -149,7 +118,7 @@ abstract class AbstractTransactionResponse implements ResponseInterface
     /**
      * @return bool
      */
-    public function isInvalid()
+    public function isInvalid() : bool
     {
         return in_array($this->statusCode, [
             self::STATUS_FAILURE,
@@ -161,7 +130,7 @@ abstract class AbstractTransactionResponse implements ResponseInterface
     /**
      * @return bool
      */
-    public function isPending()
+    public function isPending() : bool
     {
         return in_array($this->statusCode, [
             self::STATUS_PENDING_INPUT,
@@ -174,24 +143,25 @@ abstract class AbstractTransactionResponse implements ResponseInterface
     /**
      * @return bool
      */
-    public function isSuccess()
+    public function isSuccess() : bool
     {
         return self::STATUS_SUCCESS === (int) $this->statusCode;
     }
 
     /**
-     * @return string|null
+     * @param array $data
+     * @param array $requiredFields
+     *
+     * @throws BuckarooException
      */
-    public function getError()
+    protected static function assertFields(array $data, array $requiredFields)
     {
-        if ($this->isSuccess()) {
-            return null;
+        if (!empty($diff = array_diff($requiredFields, array_keys($data)))) {
+            throw new BuckarooException(sprintf(
+                'Missing fields for %s: %s',
+                static::class,
+                implode(', ', $diff)
+            ));
         }
-
-        if (!$this->statusMessage) {
-            return 'Unknown error';
-        }
-
-        return $this->statusMessage;
     }
 }

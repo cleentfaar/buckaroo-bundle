@@ -2,7 +2,9 @@
 
 namespace TreeHouse\BuckarooBundle\Response;
 
-class IdealTransactionResponse extends AbstractTransactionResponse
+use TreeHouse\BuckarooBundle\Exception\BuckarooException;
+
+class IdealTransactionResponse extends AbstractTransactionResponse implements SignedResponseInterface
 {
     /**
      * The (ideal) URL to redirect the user to to complete the transaction.
@@ -13,20 +15,15 @@ class IdealTransactionResponse extends AbstractTransactionResponse
 
     /**
      * @inheritdoc
-     *
-     * @return $this
      */
-    public static function create(array $data)
+    public function __construct(array $data)
     {
-        $response = parent::create($data);
+        parent::__construct($data);
+        parent::assertFields($data, ['BRQ_REDIRECTURL']);
 
-        if (!isset($data['BRQ_REDIRECTURL'])) {
-            throw new \InvalidArgumentException('Missing field: BRQ_REDIRECTURL');
-        }
+        $this->redirectUrl = $data['BRQ_REDIRECTURL'];
 
-        $response->redirectUrl = $data['BRQ_REDIRECTURL'];
-
-        return $response;
+        return $this;
     }
 
     /**

@@ -1,9 +1,11 @@
 <?php
 
+declare (strict_types = 1);
+
 namespace TreeHouse\BuckarooBundle\Model;
 
 /**
- * Value object with status information that can be safely displayed to our customers.
+ * Value object with status information that can be safely displayed to your customers.
  */
 class ConsumerMessage
 {
@@ -49,8 +51,13 @@ class ConsumerMessage
      * @param string $plainText
      * @param bool   $mustRead
      */
-    public function __construct($culture, $title, $htmlText, $plainText, $mustRead = true)
-    {
+    public function __construct(
+        string $culture,
+        string $title,
+        string $htmlText,
+        string $plainText,
+        bool $mustRead = true
+    ) {
         $this->culture = $culture;
         $this->title = $title;
         $this->htmlText = $htmlText;
@@ -61,7 +68,7 @@ class ConsumerMessage
     /**
      * @return string
      */
-    public function getCulture()
+    public function getCulture() : string
     {
         return $this->culture;
     }
@@ -69,7 +76,7 @@ class ConsumerMessage
     /**
      * @return string
      */
-    public function getTitle()
+    public function getTitle() : string
     {
         return $this->title;
     }
@@ -77,7 +84,7 @@ class ConsumerMessage
     /**
      * @return string
      */
-    public function getHtmlText()
+    public function getHtmlText() : string
     {
         return $this->htmlText;
     }
@@ -85,7 +92,7 @@ class ConsumerMessage
     /**
      * @return string
      */
-    public function getPlainText()
+    public function getPlainText() : string
     {
         return $this->plainText;
     }
@@ -93,7 +100,7 @@ class ConsumerMessage
     /**
      * @return bool
      */
-    public function isMustRead()
+    public function isMustRead() : bool
     {
         return $this->mustRead;
     }

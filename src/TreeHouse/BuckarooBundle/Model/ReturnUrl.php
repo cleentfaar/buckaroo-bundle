@@ -1,5 +1,7 @@
 <?php
 
+declare (strict_types = 1);
+
 namespace TreeHouse\BuckarooBundle\Model;
 
 class ReturnUrl
@@ -14,64 +16,52 @@ class ReturnUrl
     /**
      * URL to return the user to when the transaction was cancelled (by the user).
      *
-     * @var string
+     * @var string|null
      */
     private $cancel;
 
     /**
      * URL to return the user to when an error occurred during the transaction.
      *
-     * @var string
+     * @var string|null
      */
     private $error;
 
     /**
      * URL to return the user to when the transaction was rejected by their bank.
      *
-     * @var string
+     * @var string|null
      */
     private $reject;
 
     /**
-     * @param string $success
+     * @param string      $success
+     * @param string|null $cancel
+     * @param string|null $error
+     * @param string|null $reject
      */
-    public function __construct($success)
-    {
-        $this->setSuccess($success);
-    }
-
-    /**
-     * @param string $success
-     *
-     * @return $this
-     */
-    public function setSuccess($success)
-    {
+    public function __construct(
+        string $success,
+        string $cancel = null,
+        string $error = null,
+        string $reject = null
+    ) {
         $this->success = $success;
+        $this->cancel = $cancel;
+        $this->error = $error;
+        $this->reject = $reject;
     }
 
     /**
      * @return string
      */
-    public function getSuccess()
+    public function getSuccess() : string
     {
         return $this->success;
     }
 
     /**
-     * @param string $cancel
-     *
-     * @return $this
-     */
-    public function setCancel($cancel)
-    {
-        $this->cancel = $cancel;
-
-        return $this;
-    }
-
-    /**
-     * @return string
+     * @return string|null
      */
     public function getCancel()
     {
@@ -79,19 +69,7 @@ class ReturnUrl
     }
 
     /**
-     * @param string $error
-     *
-     * @return $this
-     */
-    public function setError($error)
-    {
-        $this->error = $error;
-
-        return $this;
-    }
-
-    /**
-     * @return string
+     * @return string|null
      */
     public function getError()
     {
@@ -99,19 +77,7 @@ class ReturnUrl
     }
 
     /**
-     * @param string $reject
-     *
-     * @return $this
-     */
-    public function setReject($reject)
-    {
-        $this->reject = $reject;
-
-        return $this;
-    }
-
-    /**
-     * @return string
+     * @return string|null
      */
     public function getReject()
     {
